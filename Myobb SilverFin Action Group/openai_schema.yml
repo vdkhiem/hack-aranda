@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Myobb and Silverfin Transactions API
+  version: 1.0.0
+  description: APIs for managing myobb and silverfin transactions.
+paths:
+  /transactions:
+    get:
+      summary: Get a list of all transactions
+      description: Get the list of all transactions. Return all transactions.
+      operationId: getAllTransactions
+      responses:
+        "200":
+          description: Gets the list of all transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      description: Unique Date of the transaction.
+                    transactionName:
+                      type: string
+                      description: transaction details.
+                    amount:
+                      type: string
+                      description: amount of the transaction.
