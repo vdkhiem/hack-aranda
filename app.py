@@ -38,6 +38,136 @@ def init_session_state():
 
 # General page configuration and initialization
 st.set_page_config(page_title=ui_title, page_icon=ui_icon, layout="wide")
+
+# Custom CSS for consistent font styling
+st.markdown("""
+<style>
+    /* Main content area font consistency */
+    .main .block-container {
+        font-family: "Source Sans Pro", sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    /* Chat messages consistent styling */
+    .stChatMessage {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Chat message content normalization */
+    .stChatMessage .stMarkdown,
+    .stChatMessage [data-testid="stMarkdownContainer"] {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+        font-weight: 400 !important;
+    }
+    
+    .stChatMessage .stMarkdown *,
+    .stChatMessage [data-testid="stMarkdownContainer"] * {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 400 !important;
+    }
+    
+    .stChatMessage .stMarkdown strong,
+    .stChatMessage .stMarkdown b,
+    .stChatMessage [data-testid="stMarkdownContainer"] strong,
+    .stChatMessage [data-testid="stMarkdownContainer"] b {
+        font-weight: 500 !important;
+    }
+    
+    /* Additional chat message styling */
+    .stChatMessage p, .stChatMessage div, .stChatMessage span {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Ensure all text elements use consistent font */
+    .stMarkdown, .stText, p, div, span {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 400 !important;
+    }
+    
+    /* Headers consistent styling */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Chat input styling */
+    .stChatInput > div > div > textarea {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+    }
+    
+    /* Sidebar consistent styling */
+    .css-1d391kg {
+        font-family: "Source Sans Pro", sans-serif !important;
+    }
+    
+    /* Code blocks styling */
+    .stCode {
+        font-family: "Fira Code", "Consolas", monospace !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Override any bold/italic inconsistencies in markdown */
+    .stMarkdown strong, .stMarkdown b {
+        font-weight: 500 !important;
+        font-family: "Source Sans Pro", sans-serif !important;
+    }
+    
+    .stMarkdown em, .stMarkdown i {
+        font-style: italic !important;
+        font-weight: 400 !important;
+        font-family: "Source Sans Pro", sans-serif !important;
+    }
+    
+    /* Fix inline text formatting inconsistencies */
+    .stMarkdown * {
+        font-family: "Source Sans Pro", sans-serif !important;
+    }
+    
+    /* Normalize all text content */
+    [data-testid="stMarkdownContainer"] * {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 400 !important;
+    }
+    
+    [data-testid="stMarkdownContainer"] strong,
+    [data-testid="stMarkdownContainer"] b {
+        font-weight: 500 !important;
+    }
+    
+    /* List styling */
+    .stMarkdown ul, .stMarkdown ol {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    .stMarkdown li {
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-size: 16px !important;
+        font-weight: 400 !important;
+        margin-bottom: 8px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title(ui_title)
 if len(st.session_state.items()) == 0:
     init_session_state()
@@ -95,6 +225,8 @@ if prompt := st.chat_input():
             st.session_state.messages.append({"role": "assistant", "content": output_text})
             st.session_state.citations = response["citations"]
             st.session_state.trace = response["trace"]
+            
+            # Display with consistent styling - clean text processing
             st.markdown(output_text, unsafe_allow_html=True)
 
 trace_types_map = {
