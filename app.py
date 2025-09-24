@@ -446,8 +446,7 @@ with st.sidebar:
     st.subheader("Uploaded Information")
     
     # Documents Received Container
-    st.markdown('<div class="sidebar-card">', unsafe_allow_html=True)
-    st.markdown("**Documents Received**")
+    st.markdown('<div>', unsafe_allow_html=True)
     
     for doc in st.session_state.uploaded_documents:
         st.markdown(f'''
@@ -469,7 +468,7 @@ with st.sidebar:
     st.subheader("Client Details")
     
     # Client Details Container
-    st.markdown('<div class="sidebar-card">', unsafe_allow_html=True)
+    st.markdown('<div>', unsafe_allow_html=True)
     
     # Name
     st.markdown(f'''
@@ -575,7 +574,6 @@ trace_info_types_map = {
     "orchestrationTrace": ["invocationInput", "modelInvocationInput", "modelInvocationOutput", "observation", "rationale"],
     "postProcessingTrace": ["modelInvocationInput", "modelInvocationOutput", "observation"]
 }
-
 # Sidebar section for trace
 with st.sidebar:
     st.title("Trace")
@@ -639,3 +637,4 @@ with st.sidebar:
                 citation_num = citation_num + 1
     else:
         st.text("None")
+
