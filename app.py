@@ -3,6 +3,7 @@ import json
 import logging
 import logging.config
 import os
+import pandas as pd
 import re
 from UI import bedrock_agent_runtime
 import streamlit as st
@@ -23,8 +24,8 @@ else:
 logger = logging.getLogger(__name__)
 
 # Get config from environment variables
-agent_id = os.environ.get("BEDROCK_AGENT_ID")
-agent_alias_id = os.environ.get("BEDROCK_AGENT_ALIAS_ID", "TSTALIASID")  # TSTALIASID is the default test alias ID
+agent_id = os.environ.get("BEDROCK_AGENT_ID", 'F95VFQLKN0')
+agent_alias_id = os.environ.get("BEDROCK_AGENT_ALIAS_ID", "S5KM0MEAKF")  # TSTALIASID is the default test alias ID
 ui_title = os.environ.get("BEDROCK_AGENT_TEST_UI_TITLE", "Welcome to Accura Agent")
 ui_icon = os.environ.get("BEDROCK_AGENT_TEST_UI_ICON")
 
@@ -34,6 +35,23 @@ def init_session_state():
     st.session_state.messages = []
     st.session_state.citations = []
     st.session_state.trace = {}
+    st.session_state.uploaded_documents = [
+        {"name": "Tax_Return_2023.pdf", "size": "2.3 MB", "status": "completed"},
+        {"name": "Receipts_Folder.zip", "size": "4.1 MB", "status": "completed"}
+    ]
+    st.session_state.client_details = {
+        "name": "John Doe",
+        "date_of_birth": "01/01/1990",
+        "tfn": "123 456 789",
+        "address": "42 Collins Street, Melbourne VIC 3000",
+        "address_status": "needs_confirmation"
+    }
+    st.session_state.transaction_data = [
+        {"date": "2025-03-15", "amount": 40123, "hasReceipt": False, "transactionName": "Motor vehicle expenses"},
+        {"date": "2025-02-16", "amount": 3000, "hasReceipt": False, "transactionName": "Buy a laptop"},
+        {"date": "2025-01-15", "amount": 45000, "hasReceipt": True, "transactionName": "Buy a car"}
+    ]
+    st.session_state.show_right_panel = False
 
 
 # General page configuration and initialization
@@ -136,10 +154,31 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
     }
     
-    /* Sidebar styling with blue theme */
+    /* Sidebar styling with blue theme and increased width */
     .css-1d391kg, .css-1lcbmhc, .css-17eq0hr {
         background-color: #f1f5f9 !important;
         border-right: 2px solid #e2e8f0 !important;
+        min-width: 400px !important;
+        max-width: 450px !important;
+        width: 400px !important;
+    }
+    
+    /* Sidebar container adjustment */
+    section[data-testid="stSidebar"] {
+        width: 400px !important;
+        min-width: 400px !important;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        width: 400px !important;
+        min-width: 400px !important;
+        max-width: 450px !important;
+    }
+    
+    /* Main content area adjustment to accommodate larger sidebar */
+    .main .block-container {
+        padding-left: 2rem !important;
+        max-width: calc(100vw - 420px) !important;
     }
     
     /* Sidebar headers */
@@ -240,6 +279,194 @@ st.markdown("""
         color: #f97316 !important;
     }
     
+    /* Sidebar sections styling */
+    .css-1d391kg .stSubheader {
+        color: #1e40af !important;
+        font-weight: 600 !important;
+        margin-top: 2rem !important;
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+    }
+    
+    /* Sidebar card styling */
+    .sidebar-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Document item styling */
+    .document-item {
+        background-color: #f8fdf4 !important;
+        border: 1px solid #d1fae5 !important;
+        border-radius: 6px !important;
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .doc-content {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+    }
+    
+    .doc-icon {
+        font-size: 1.25rem !important;
+    }
+    
+    .doc-info {
+        flex-grow: 1 !important;
+    }
+    
+    .doc-name {
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+        font-size: 1rem !important;
+        margin-bottom: 0.25rem !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .doc-size {
+        color: #6b7280 !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .doc-status {
+        color: #059669 !important;
+        font-size: 1.1rem !important;
+    }
+    
+    /* Client details field styling */
+    .client-field {
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.75rem !important;
+        border-bottom: 1px solid #f3f4f6 !important;
+    }
+    
+    .client-field:last-child {
+        border-bottom: none !important;
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    
+    .field-label {
+        font-weight: 600 !important;
+        color: #374151 !important;
+        font-size: 1rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+    
+    .field-value {
+        color: #1f2937 !important;
+        font-size: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        line-height: 1.5 !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    .status-check {
+        color: #059669 !important;
+        font-weight: 600 !important;
+    }
+    
+    .status-warning {
+        color: #f59e0b !important;
+        font-weight: 600 !important;
+    }
+    
+    .warning-message {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+        padding: 0.6rem !important;
+        border-radius: 4px !important;
+        font-size: 0.9rem !important;
+        margin-top: 0.5rem !important;
+        border: 1px solid #f59e0b !important;
+        line-height: 1.4 !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    /* Right panel styling */
+    .right-panel-container {
+        margin-top: 2rem !important;
+    }
+    
+    .right-panel-content {
+        background-color: #ffffff !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        position: sticky !important;
+        top: 2rem !important;
+    }
+    
+    /* MYOB header styling */
+    .right-panel-content h3 {
+        color: #1e40af !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Streamlit dataframe styling for right panel */
+    .right-panel-content .stDataFrame {
+        margin-top: 1rem !important;
+    }
+    
+    .right-panel-content .stDataFrame table {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    .right-panel-content .stDataFrame thead th {
+        background-color: #f8fafc !important;
+        color: #374151 !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #e5e7eb !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody td {
+        padding: 0.75rem !important;
+        border-bottom: 1px solid #f3f4f6 !important;
+        color: #1f2937 !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody tr:hover {
+        background-color: #f9fafb !important;
+    }
+    
+    /* Style specific columns */
+    .right-panel-content .stDataFrame tbody td:nth-child(1) {
+        color: #2563eb !important;
+        font-weight: 500 !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody td:nth-child(2) {
+        color: #059669 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Adjust main content when right panel is visible */
+    .main-with-right-panel {
+        margin-right: 470px !important;
+    }
+    
     /* Spinner styling */
     .stSpinner > div {
         border-color: #2563eb !important;
@@ -292,8 +519,74 @@ st.title(ui_title)
 if len(st.session_state.items()) == 0:
     init_session_state()
 
-# Sidebar button to reset session state
+# Sidebar sections
 with st.sidebar:
+    # Uploaded Information Section
+    st.subheader("Uploaded Information")
+    
+    # Documents Received Container
+    st.markdown('<div>', unsafe_allow_html=True)
+    
+    for doc in st.session_state.uploaded_documents:
+        st.markdown(f'''
+        <div class="document-item">
+            <div class="doc-content">
+                <div class="doc-icon">📄</div>
+                <div class="doc-info">
+                    <div class="doc-name">{doc['name']}</div>
+                    <div class="doc-size">{doc['size']}</div>
+                </div>
+                <div class="doc-status">✅</div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Client Details Section  
+    st.subheader("Client Details")
+    
+    # Client Details Container
+    st.markdown('<div>', unsafe_allow_html=True)
+    
+    # Name
+    st.markdown(f'''
+    <div class="client-field">
+        <div class="field-label">Name</div>
+        <div class="field-value">{st.session_state.client_details['name']} <span class="status-check">✓</span></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Date of Birth
+    st.markdown(f'''
+    <div class="client-field">
+        <div class="field-label">Date of Birth</div>
+        <div class="field-value">{st.session_state.client_details['date_of_birth']} <span class="status-check">✓</span></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # TFN
+    st.markdown(f'''
+    <div class="client-field">
+        <div class="field-label">TFN</div>
+        <div class="field-value">{st.session_state.client_details['tfn']} <span class="status-check">✓</span></div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Address
+    st.markdown(f'''
+    <div class="client-field">
+        <div class="field-label">Address</div>
+        <div class="field-value">{st.session_state.client_details['address']} <span class="status-warning">⚠️</span></div>
+        <div class="warning-message">Please confirm or update this information</div>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Reset Session Button
     if st.button("Reset Session"):
         init_session_state()
 
@@ -346,6 +639,9 @@ if prompt := st.chat_input():
             st.session_state.citations = response["citations"]
             st.session_state.trace = response["trace"]
             
+            # Check if we should show the right panel
+            st.session_state.show_right_panel = "motor vehicle" in output_text.lower()
+            
             # Display with consistent styling - clean text processing
             st.markdown(output_text, unsafe_allow_html=True)
 
@@ -360,7 +656,6 @@ trace_info_types_map = {
     "orchestrationTrace": ["invocationInput", "modelInvocationInput", "modelInvocationOutput", "observation", "rationale"],
     "postProcessingTrace": ["modelInvocationInput", "modelInvocationOutput", "observation"]
 }
-
 # Sidebar section for trace
 with st.sidebar:
     st.title("Trace")
@@ -424,3 +719,45 @@ with st.sidebar:
                 citation_num = citation_num + 1
     else:
         st.text("None")
+
+# Display right panel conditionally
+if hasattr(st.session_state, 'show_right_panel') and st.session_state.show_right_panel:
+    # Create a container for the right panel using Streamlit components
+    with st.container():
+        # Create right panel using HTML container but Streamlit components inside
+        st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
+        
+        # Use columns to position the panel on the right
+        col1, col2 = st.columns([3, 2])
+        
+        with col2:
+            st.markdown('<div>', unsafe_allow_html=True)
+            st.markdown("### MYOB Business / Silverfin")
+            
+            # Filter and format data
+            table_data = []
+            for transaction in st.session_state.transaction_data:
+                table_data.append({
+                    "Date": transaction["date"],
+                    "Transaction Description": transaction["transactionName"],
+                    "Amount ($)": f"${transaction['amount']:,}"
+                })
+            
+            df = pd.DataFrame(table_data)
+            
+            # Display the table with custom styling
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Date": st.column_config.TextColumn("Date", width="small"),
+                    "Transaction Description": st.column_config.TextColumn("Transaction Description", width="large"),
+                    "Amount ($)": st.column_config.TextColumn("Amount ($)", width="small")
+                }
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
