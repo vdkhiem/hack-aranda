@@ -39,21 +39,46 @@ def init_session_state():
 # General page configuration and initialization
 st.set_page_config(page_title=ui_title, page_icon=ui_icon, layout="wide")
 
-# Custom CSS for consistent font styling
+# Custom CSS for Accura Analysis theme
 st.markdown("""
 <style>
-    /* Main content area font consistency */
+    /* Main content area styling with Accura colors */
     .main .block-container {
         font-family: "Source Sans Pro", sans-serif;
         font-size: 16px;
         line-height: 1.6;
+        background-color: #f8f9fa;
     }
     
-    /* Chat messages consistent styling */
+    /* Page header styling */
+    h1 {
+        color: #2563eb !important;
+        font-family: "Source Sans Pro", sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 2.5rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Chat messages styling with blue theme */
     .stChatMessage {
         font-family: "Source Sans Pro", sans-serif !important;
         font-size: 16px !important;
         line-height: 1.6 !important;
+        border-radius: 8px !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* User message styling */
+    .stChatMessage[data-testid="user"] {
+        background-color: #dbeafe !important;
+        border-left: 4px solid #2563eb !important;
+    }
+    
+    /* Assistant message styling */
+    .stChatMessage[data-testid="assistant"] {
+        background-color: #ffffff !important;
+        border-left: 4px solid #f97316 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
     }
     
     /* Chat message content normalization */
@@ -74,7 +99,8 @@ st.markdown("""
     .stChatMessage .stMarkdown b,
     .stChatMessage [data-testid="stMarkdownContainer"] strong,
     .stChatMessage [data-testid="stMarkdownContainer"] b {
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        color: #1e40af !important;
     }
     
     /* Additional chat message styling */
@@ -90,44 +116,86 @@ st.markdown("""
         font-weight: 400 !important;
     }
     
-    /* Headers consistent styling */
-    h1, h2, h3, h4, h5, h6 {
+    /* Headers consistent styling with blue theme */
+    h2, h3, h4, h5, h6 {
         font-family: "Source Sans Pro", sans-serif !important;
         font-weight: 600 !important;
+        color: #1e40af !important;
     }
     
-    /* Chat input styling */
+    /* Chat input styling with blue accent */
     .stChatInput > div > div > textarea {
         font-family: "Source Sans Pro", sans-serif !important;
         font-size: 16px !important;
+        border: 2px solid #e5e7eb !important;
+        border-radius: 8px !important;
     }
     
-    /* Sidebar consistent styling */
-    .css-1d391kg {
+    .stChatInput > div > div > textarea:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+    
+    /* Sidebar styling with blue theme */
+    .css-1d391kg, .css-1lcbmhc, .css-17eq0hr {
+        background-color: #f1f5f9 !important;
+        border-right: 2px solid #e2e8f0 !important;
+    }
+    
+    /* Sidebar headers */
+    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+        color: #1e40af !important;
         font-family: "Source Sans Pro", sans-serif !important;
     }
     
     /* Code blocks styling */
     .stCode {
         font-family: "Fira Code", "Consolas", monospace !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
     }
     
-    /* Button styling */
+    /* Button styling with blue theme */
     .stButton > button {
         font-family: "Source Sans Pro", sans-serif !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        background-color: #2563eb !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.2s ease !important;
     }
     
-    /* Expander styling */
+    .stButton > button:hover {
+        background-color: #1d4ed8 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    }
+    
+    /* Expander styling with blue theme */
     .streamlit-expanderHeader {
         font-family: "Source Sans Pro", sans-serif !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        background-color: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        color: #1e40af !important;
+    }
+    
+    .streamlit-expanderContent {
+        border: 1px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-radius: 0 0 6px 6px !important;
+        background-color: #ffffff !important;
     }
     
     /* Override any bold/italic inconsistencies in markdown */
     .stMarkdown strong, .stMarkdown b {
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         font-family: "Source Sans Pro", sans-serif !important;
+        color: #1e40af !important;
     }
     
     .stMarkdown em, .stMarkdown i {
@@ -149,10 +217,11 @@ st.markdown("""
     
     [data-testid="stMarkdownContainer"] strong,
     [data-testid="stMarkdownContainer"] b {
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        color: #1e40af !important;
     }
     
-    /* List styling */
+    /* List styling with orange accents */
     .stMarkdown ul, .stMarkdown ol {
         font-family: "Source Sans Pro", sans-serif !important;
         font-size: 16px !important;
@@ -164,6 +233,57 @@ st.markdown("""
         font-size: 16px !important;
         font-weight: 400 !important;
         margin-bottom: 8px !important;
+        position: relative !important;
+    }
+    
+    .stMarkdown ul li::marker {
+        color: #f97316 !important;
+    }
+    
+    /* Spinner styling */
+    .stSpinner > div {
+        border-color: #2563eb !important;
+    }
+    
+    /* Citation links styling */
+    sup {
+        color: #f97316 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Citation references styling */
+    br + a {
+        color: #f97316 !important;
+        text-decoration: none !important;
+    }
+    
+    br + a:hover {
+        text-decoration: underline !important;
+        color: #ea580c !important;
+    }
+    
+    /* Warning/alert boxes (if any) */
+    .stAlert {
+        border-radius: 8px !important;
+    }
+    
+    .stAlert[data-baseweb="notification"] {
+        background-color: #fef3c7 !important;
+        border-left: 4px solid #f59e0b !important;
+    }
+    
+    /* Success messages */
+    .stSuccess {
+        background-color: #dcfce7 !important;
+        border-left: 4px solid #22c55e !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Info messages */
+    .stInfo {
+        background-color: #dbeafe !important;
+        border-left: 4px solid #2563eb !important;
+        border-radius: 8px !important;
     }
 </style>
 """, unsafe_allow_html=True)
