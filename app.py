@@ -39,8 +39,8 @@ def init_session_state():
         {"name": "Receipts_Folder.zip", "size": "4.1 MB", "status": "completed"}
     ]
     st.session_state.client_details = {
-        "name": "Sarah Mitchell",
-        "date_of_birth": "15/03/1985",
+        "name": "John Doe",
+        "date_of_birth": "01/01/1990",
         "tfn": "123 456 789",
         "address": "42 Collins Street, Melbourne VIC 3000",
         "address_status": "needs_confirmation"
