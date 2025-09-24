@@ -18,7 +18,14 @@ if os.path.exists("logging.yaml"):
         config = yaml.safe_load(file)
         logging.config.dictConfig(config)
 else:
-    log_level = logging.getLevelNamesMapping()[(os.environ.get("LOG_LEVEL", "INFO"))]
+    # More robust logging configuration
+    log_level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
+    try:
+        # Try the newer method first (Python 3.4+)
+        log_level = logging.getLevelNamesMapping().get(log_level_name, logging.INFO)
+    except AttributeError:
+        # Fallback for older versions or edge cases
+        log_level = getattr(logging, log_level_name, logging.INFO)
     logging.basicConfig(level=log_level)
 
 logger = logging.getLogger(__name__)
@@ -732,7 +739,7 @@ if hasattr(st.session_state, 'show_right_panel') and st.session_state.show_right
         
         with col2:
             st.markdown('<div>', unsafe_allow_html=True)
-            st.markdown("### MYOB Business / Silverfin")
+            st.markdown("### ACCURA")
             
             # Filter and format data
             table_data = []
