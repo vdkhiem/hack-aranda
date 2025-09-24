@@ -3,6 +3,7 @@ import json
 import logging
 import logging.config
 import os
+import pandas as pd
 import re
 from UI import bedrock_agent_runtime
 import streamlit as st
@@ -45,6 +46,12 @@ def init_session_state():
         "address": "42 Collins Street, Melbourne VIC 3000",
         "address_status": "needs_confirmation"
     }
+    st.session_state.transaction_data = [
+        {"date": "2025-03-15", "amount": 40123, "hasReceipt": False, "transactionName": "Motor vehicle expenses"},
+        {"date": "2025-02-16", "amount": 3000, "hasReceipt": False, "transactionName": "Buy a laptop"},
+        {"date": "2025-01-15", "amount": 45000, "hasReceipt": True, "transactionName": "Buy a car"}
+    ]
+    st.session_state.show_right_panel = False
 
 
 # General page configuration and initialization
@@ -388,6 +395,78 @@ st.markdown("""
         overflow-wrap: break-word !important;
     }
     
+    /* Right panel styling */
+    .right-panel-container {
+        margin-top: 2rem !important;
+    }
+    
+    .right-panel-content {
+        background-color: #ffffff !important;
+        border: 2px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        position: sticky !important;
+        top: 2rem !important;
+    }
+    
+    /* MYOB header styling */
+    .right-panel-content h3 {
+        color: #1e40af !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Streamlit dataframe styling for right panel */
+    .right-panel-content .stDataFrame {
+        margin-top: 1rem !important;
+    }
+    
+    .right-panel-content .stDataFrame table {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    .right-panel-content .stDataFrame thead th {
+        background-color: #f8fafc !important;
+        color: #374151 !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #e5e7eb !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody td {
+        padding: 0.75rem !important;
+        border-bottom: 1px solid #f3f4f6 !important;
+        color: #1f2937 !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody tr:hover {
+        background-color: #f9fafb !important;
+    }
+    
+    /* Style specific columns */
+    .right-panel-content .stDataFrame tbody td:nth-child(1) {
+        color: #2563eb !important;
+        font-weight: 500 !important;
+    }
+    
+    .right-panel-content .stDataFrame tbody td:nth-child(2) {
+        color: #059669 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Adjust main content when right panel is visible */
+    .main-with-right-panel {
+        margin-right: 470px !important;
+    }
+    
     /* Spinner styling */
     .stSpinner > div {
         border-color: #2563eb !important;
@@ -560,6 +639,9 @@ if prompt := st.chat_input():
             st.session_state.citations = response["citations"]
             st.session_state.trace = response["trace"]
             
+            # Check if we should show the right panel
+            st.session_state.show_right_panel = "motor vehicle" in output_text.lower()
+            
             # Display with consistent styling - clean text processing
             st.markdown(output_text, unsafe_allow_html=True)
 
@@ -637,4 +719,45 @@ with st.sidebar:
                 citation_num = citation_num + 1
     else:
         st.text("None")
+
+# Display right panel conditionally
+if hasattr(st.session_state, 'show_right_panel') and st.session_state.show_right_panel:
+    # Create a container for the right panel using Streamlit components
+    with st.container():
+        # Create right panel using HTML container but Streamlit components inside
+        st.markdown('<div class="right-panel-container">', unsafe_allow_html=True)
+        
+        # Use columns to position the panel on the right
+        col1, col2 = st.columns([3, 2])
+        
+        with col2:
+            st.markdown('<div>', unsafe_allow_html=True)
+            st.markdown("### MYOB Business / Silverfin")
+            
+            # Filter and format data
+            table_data = []
+            for transaction in st.session_state.transaction_data:
+                table_data.append({
+                    "Date": transaction["date"],
+                    "Transaction Description": transaction["transactionName"],
+                    "Amount ($)": f"${transaction['amount']:,}"
+                })
+            
+            df = pd.DataFrame(table_data)
+            
+            # Display the table with custom styling
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Date": st.column_config.TextColumn("Date", width="small"),
+                    "Transaction Description": st.column_config.TextColumn("Transaction Description", width="large"),
+                    "Amount ($)": st.column_config.TextColumn("Amount ($)", width="small")
+                }
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
